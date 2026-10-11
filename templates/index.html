@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance Management</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-box">
+          <p class="eyebrow">Finance</p>
+          <h2>Manager</h2>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Main navigation">
+          <button class="nav-btn active" type="button" data-target="dashboard-view">Dashboard</button>
+          <button class="nav-btn" type="button" data-target="add-account-panel">Add Account</button>
+          <button class="nav-btn" type="button" data-target="add-log-panel">Add Daily Log</button>
+          <button class="nav-btn" type="button" data-target="daily-logs-panel">Daily Logs</button>
+          <button class="nav-btn" type="button" data-target="monthly-logs-panel">Monthly Logs</button>
+          <button class="nav-btn" type="button" data-target="close-account-panel">Close Account</button>
+          <a class="nav-btn nav-link" href="/accounts">Accounts</a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <section class="view-panel active" id="dashboard-view">
+          <header class="topbar">
+            <div>
+              <p class="eyebrow">Finance Dashboard</p>
+              <h1>Loan & Payment Tracker</h1>
+            </div>
+          </header>
+
+          <section class="overview">
+            <div class="card stat-card">
+              <span>Total Accounts</span>
+              <strong id="totalAccounts">0</strong>
+            </div>
+            <div class="card stat-card">
+              <span>Active Accounts</span>
+              <strong id="activeAccounts">0</strong>
+            </div>
+            <div class="card stat-card">
+              <span>Closed Accounts</span>
+              <strong id="closedAccounts">0</strong>
+            </div>
+            <div class="card stat-card highlight">
+              <span>Collected</span>
+              <strong id="totalCollected">₹0.00</strong>
+            </div>
+            <div class="card stat-card accent">
+              <span>Available Balance</span>
+              <strong id="availableBalance">₹0.00</strong>
+            </div>
+          </section>
+
+          <section class="card table-card">
+            <div class="section-head">
+              <h2>Accounts</h2>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Loan Date</th>
+                    <th>Given</th>
+                    <th>Expected</th>
+                    <th>Collected</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="accountsTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="view-panel" id="add-account-panel">
+          <div class="panel-header">
+            <p class="eyebrow">Operations</p>
+            <h2>Add New Account</h2>
+          </div>
+          <div class="panel-card">
+            <form id="accountForm">
+              <div class="form-grid">
+                <label>
+                  Name
+                  <input type="text" id="name" name="name" required />
+                </label>
+                <label>
+                  Display Name
+                  <input type="text" id="displayName" name="display_name" readonly />
+                </label>
+                <label>
+                  Loan Given Date
+                  <input type="date" id="loanGivenDate" name="loan_given_date" required />
+                </label>
+                <label>
+                  Given Amount
+                  <input type="number" id="givenAmount" name="given_amount" step="0.01" min="0" required />
+                </label>
+                <label>
+                  Expected Amount
+                  <input type="number" id="expectedAmount" name="expected_amount" step="0.01" min="0" required />
+                </label>
+                <label>
+                  Total Months
+                  <input type="number" id="totalMonths" name="total_months" min="1" required />
+                </label>
+              </div>
+              <button type="submit" class="primary-btn">Save Account</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="view-panel" id="add-log-panel">
+          <div class="panel-header">
+            <p class="eyebrow">Operations</p>
+            <h2>Add Daily Logs</h2>
+          </div>
+          <div class="panel-card log-card">
+            <form id="logForm">
+              <div class="toolbar-row">
+                <div>
+                  <h3>Payment Entries</h3>
+                  <p class="subtle-text">Add multiple entries in one go for faster data entry.</p>
+                </div>
+                <button type="button" id="addLogRowBtn" class="secondary-btn">+ Add Row</button>
+              </div>
+
+              <div class="table-shell">
+                <table class="data-table entry-table">
+                  <thead>
+                    <tr>
+                      <th>Account</th>
+                      <th>Amount</th>
+                      <th>Date</th>
+                      <th class="cell-action">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="logEntries"></tbody>
+                </table>
+              </div>
+
+              <div class="inline-actions end-actions">
+                <button type="submit" class="primary-btn">Save All Payments</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="view-panel" id="daily-logs-panel">
+          <div class="panel-header">
+            <p class="eyebrow">Records</p>
+            <h2>Daily Logs</h2>
+          </div>
+          <div class="panel-card">
+            <div class="section-head daily-log-head">
+              <div>
+                <h3>Daily Collection Log</h3>
+                <span class="muted-pill">Default: last 10 days</span>
+              </div>
+              <div class="daily-log-filters">
+                <label class="inline-date-field">
+                  <span>From</span>
+                  <input id="dailyLogFromDate" type="date" />
+                </label>
+                <label class="inline-date-field">
+                  <span>To</span>
+                  <input id="dailyLogToDate" type="date" />
+                </label>
+                <button id="applyDailyLogFilterBtn" type="button" class="primary-btn small-btn">Apply</button>
+                <button id="resetDailyLogFilterBtn" type="button" class="secondary-btn small-btn">Last 10 Days</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Account</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="dailyLogsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view-panel" id="monthly-logs-panel">
+          <div class="panel-header">
+            <p class="eyebrow">Reports</p>
+            <h2>Monthly Logs</h2>
+          </div>
+          <div class="panel-card">
+            <div class="monthly-selector-row">
+              <label>
+                Select Account
+                <select id="monthlyLogAccountSelect" required>
+                  <option value="">Select account</option>
+                </select>
+              </label>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Month</th>
+                    <th>Monthly Target</th>
+                    <th>Current Amount</th>
+                    <th>Status</th>
+                    <th>Completed Date</th>
+                  </tr>
+                </thead>
+                <tbody id="monthlyLogsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view-panel" id="close-account-panel">
+          <div class="panel-header">
+            <p class="eyebrow">Operations</p>
+            <h2>Close Account</h2>
+          </div>
+          <div class="panel-card">
+            <form id="closeAccountForm">
+              <div class="form-grid single-column">
+                <label>
+                  Select Account
+                  <select id="closeAccountSelect" required></select>
+                </label>
+              </div>
+              <button type="submit" class="danger-btn wide">Close Selected Account</button>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const accountForm = document.getElementById('accountForm');
+      const logForm = document.getElementById('logForm');
+      const closeAccountForm = document.getElementById('closeAccountForm');
+      const accountsTableBody = document.getElementById('accountsTableBody');
+      const closeAccountSelect = document.getElementById('closeAccountSelect');
+      const logEntries = document.getElementById('logEntries');
+      const dailyLogsTableBody = document.getElementById('dailyLogsTableBody');
+      const dailyLogFromDateInput = document.getElementById('dailyLogFromDate');
+      const dailyLogToDateInput = document.getElementById('dailyLogToDate');
+      const monthlyLogAccountSelect = document.getElementById('monthlyLogAccountSelect');
+      const monthlyLogsTableBody = document.getElementById('monthlyLogsTableBody');
+      const navButtons = document.querySelectorAll('.nav-btn');
+      const viewPanels = document.querySelectorAll('.view-panel');
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('loanGivenDate').value = today;
+
+      function getDefaultDailyLogRange() {
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(endDate.getDate() - 9);
+        return {
+          from: startDate.toISOString().split('T')[0],
+          to: endDate.toISOString().split('T')[0],
+        };
+      }
+
+      function setDefaultDailyLogRange() {
+        const defaultRange = getDefaultDailyLogRange();
+        dailyLogFromDateInput.value = defaultRange.from;
+        dailyLogToDateInput.value = defaultRange.to;
+      }
+
+      function formatCurrency(value) {
+        return new Intl.NumberFormat('en-IN', {
+          style: 'currency',
+          currency: 'INR',
+          maximumFractionDigits: 2,
+        }).format(Number(value || 0));
+      }
+
+      function updateDisplayName() {
+        const name = document.getElementById('name').value.trim();
+        const loanDate = document.getElementById('loanGivenDate').value;
+        const displayNameInput = document.getElementById('displayName');
+
+        if (!name || !loanDate) {
+          displayNameInput.value = '';
+          return;
+        }
+
+        displayNameInput.value = `${name} (${loanDate})`;
+      }
+
+      document.getElementById('name').addEventListener('input', updateDisplayName);
+      document.getElementById('loanGivenDate').addEventListener('input', updateDisplayName);
+
+      navButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          navButtons.forEach((btn) => btn.classList.remove('active'));
+          button.classList.add('active');
+
+          const target = button.getAttribute('data-target');
+          viewPanels.forEach((panel) => {
+            panel.classList.toggle('active', panel.id === target);
+          });
+        });
+      });
+
+      async function loadDashboard() {
+        const response = await fetch('/api/dashboard');
+        const data = await response.json();
+        document.getElementById('totalAccounts').textContent = data.total_accounts;
+        document.getElementById('activeAccounts').textContent = data.active_accounts;
+        document.getElementById('closedAccounts').textContent = data.closed_accounts;
+        document.getElementById('totalCollected').textContent = formatCurrency(data.total_collected);
+        document.getElementById('availableBalance').textContent = formatCurrency(data.available_balance);
+      }
+
+      function renderRecentDailyLogs(logs) {
+        dailyLogsTableBody.innerHTML = '';
+        if (!logs.length) {
+          dailyLogsTableBody.innerHTML = '<tr><td colspan="3" class="muted">No daily collection logs found in the last 10 days.</td></tr>';
+          return;
+        }
+
+        logs.forEach((log) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${log.account_name || 'Unknown Account'}</td>
+            <td>${log.date || '—'}</td>
+            <td>${formatCurrency(log.amount)}</td>
+          `;
+          dailyLogsTableBody.appendChild(row);
+        });
+      }
+
+      async function loadRecentDailyLogs() {
+        const params = new URLSearchParams();
+        const fromDate = dailyLogFromDateInput.value;
+        const toDate = dailyLogToDateInput.value;
+
+        if (fromDate) {
+          params.set('from_date', fromDate);
+        }
+        if (toDate) {
+          params.set('to_date', toDate);
+        }
+
+        const queryString = params.toString();
+        const response = await fetch(`/api/daily-logs/recent${queryString ? `?${queryString}` : ''}`);
+        const payload = await response.json();
+        renderRecentDailyLogs(payload.logs || []);
+      }
+
+      function renderMonthlyLogs(logs) {
+        monthlyLogsTableBody.innerHTML = '';
+        if (!logs.length) {
+          monthlyLogsTableBody.innerHTML = '<tr><td colspan="5" class="muted">No monthly log entries found for this account.</td></tr>';
+          return;
+        }
+
+        logs.forEach((entry) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>Month ${entry.current_month}</td>
+            <td>${formatCurrency(entry.month_amount)}</td>
+            <td>${formatCurrency(entry.current_amount)}</td>
+            <td><span class="status ${entry.completed_month ? 'open' : 'closed'}">${entry.completed_month ? 'Completed' : 'In Progress'}</span></td>
+            <td>${entry.completed_date || '—'}</td>
+          `;
+          monthlyLogsTableBody.appendChild(row);
+        });
+      }
+
+      async function loadMonthlyLogs(accountId) {
+        if (!accountId) {
+          monthlyLogsTableBody.innerHTML = '<tr><td colspan="5" class="muted">Select an account to view monthly logs.</td></tr>';
+          return;
+        }
+
+        const response = await fetch(`/api/accounts/${accountId}/monthly-logs`);
+        const payload = await response.json();
+        renderMonthlyLogs(payload.logs || []);
+      }
+
+      async function loadMonthlyLogAccounts() {
+        const response = await fetch('/api/accounts');
+        const payload = await response.json();
+        const accounts = payload.accounts || [];
+
+        monthlyLogAccountSelect.innerHTML = '<option value="">Select account</option>';
+        accounts.forEach((account) => {
+          const option = document.createElement('option');
+          option.value = account.id;
+          option.textContent = account.display_name;
+          monthlyLogAccountSelect.appendChild(option);
+        });
+
+        if (monthlyLogAccountSelect.value) {
+          loadMonthlyLogs(monthlyLogAccountSelect.value);
+        } else {
+          monthlyLogsTableBody.innerHTML = '<tr><td colspan="5" class="muted">Select an account to view monthly logs.</td></tr>';
+        }
+      }
+
+      function buildLogRow(accountId = '', amount = '', date = today) {
+        const row = document.createElement('tr');
+        row.className = 'log-entry-row';
+        row.innerHTML = `
+          <td>
+            <select class="entry-account" required>
+              <option value="">Select account</option>
+            </select>
+          </td>
+          <td>
+            <input class="entry-amount" type="number" step="0.01" min="0" value="${amount}" placeholder="0.00" required />
+          </td>
+          <td>
+            <input class="entry-date" type="date" value="${date}" required />
+          </td>
+          <td class="cell-action">
+            <button type="button" class="remove-row-btn" aria-label="Remove entry">Remove</button>
+          </td>
+        `;
+
+        const accountSelectElement = row.querySelector('.entry-account');
+        const accountOptions = Array.from(document.querySelectorAll('#closeAccountSelect option')).slice(1);
+        accountOptions.forEach((optionNode) => {
+          const clonedOption = document.createElement('option');
+          clonedOption.value = optionNode.value;
+          clonedOption.textContent = optionNode.textContent;
+          clonedOption.disabled = optionNode.disabled;
+          if (optionNode.value === accountId) {
+            clonedOption.selected = true;
+          }
+          accountSelectElement.appendChild(clonedOption);
+        });
+
+        row.querySelector('.remove-row-btn').addEventListener('click', () => {
+          row.remove();
+        });
+
+        return row;
+      }
+
+      function populateLogRows() {
+        const rows = Array.from(logEntries.querySelectorAll('.log-entry-row'));
+        if (rows.length === 0) {
+          logEntries.appendChild(buildLogRow());
+        }
+      }
+
+      async function loadAccounts() {
+        const response = await fetch('/api/accounts');
+        const data = await response.json();
+        const accounts = data.accounts || [];
+        accountsTableBody.innerHTML = '';
+        closeAccountSelect.innerHTML = '<option value="">Select account</option>';
+
+        accounts.forEach((account) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${account.display_name}</td>
+            <td>${account.loan_given_date}</td>
+            <td>${formatCurrency(account.given_amount)}</td>
+            <td>${formatCurrency(account.expected_amount)}</td>
+            <td>${formatCurrency(account.amount_collected)}</td>
+            <td><span class="status ${account.status.toLowerCase()}">${account.status}</span></td>
+            <td>
+              ${account.status === 'Open' ? '<button class="danger-btn" data-close-id="' + account.id + '">Close</button>' : '<span class="muted">Closed</span>'}
+            </td>
+          `;
+          accountsTableBody.appendChild(row);
+
+          const closeOption = document.createElement('option');
+          closeOption.value = account.id;
+          closeOption.textContent = account.display_name;
+          closeOption.disabled = account.status === 'Closed';
+          closeAccountSelect.appendChild(closeOption);
+        });
+
+        const existingRows = Array.from(logEntries.querySelectorAll('.log-entry-row'));
+        if (existingRows.length === 0) {
+          logEntries.appendChild(buildLogRow());
+        } else {
+          existingRows.forEach((row) => {
+            const accountSelectElement = row.querySelector('.entry-account');
+            accountSelectElement.innerHTML = '<option value="">Select account</option>';
+            const accountOptions = Array.from(closeAccountSelect.querySelectorAll('option')).slice(1);
+            accountOptions.forEach((optionNode) => {
+              const clonedOption = document.createElement('option');
+              clonedOption.value = optionNode.value;
+              clonedOption.textContent = optionNode.textContent;
+              clonedOption.disabled = optionNode.disabled;
+              if (accountSelectElement.value === optionNode.value) {
+                clonedOption.selected = true;
+              }
+              accountSelectElement.appendChild(clonedOption);
+            });
+          });
+        }
+
+        document.querySelectorAll('[data-close-id]').forEach((button) => {
+          button.addEventListener('click', async () => {
+            const accountId = button.getAttribute('data-close-id');
+            const result = await fetch(`/api/accounts/${accountId}/close`, { method: 'POST' });
+            const payload = await result.json();
+            if (!result.ok) {
+              alert(payload.error || 'Unable to close account');
+              return;
+            }
+            alert(payload.message);
+            loadDashboard();
+            loadAccounts();
+          });
+        });
+
+        loadMonthlyLogAccounts();
+      }
+
+      accountForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const payload = {
+          name: document.getElementById('name').value,
+          display_name: document.getElementById('displayName').value,
+          loan_given_date: document.getElementById('loanGivenDate').value,
+          given_amount: document.getElementById('givenAmount').value,
+          expected_amount: document.getElementById('expectedAmount').value,
+          total_months: document.getElementById('totalMonths').value,
+        };
+
+        const response = await fetch('/api/accounts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          alert(result.error || 'Unable to create account');
+          return;
+        }
+        alert(result.message);
+        accountForm.reset();
+        document.getElementById('loanGivenDate').value = today;
+        loadDashboard();
+        loadAccounts();
+      });
+
+      document.getElementById('applyDailyLogFilterBtn').addEventListener('click', () => {
+        const fromDate = dailyLogFromDateInput.value;
+        const toDate = dailyLogToDateInput.value;
+
+        if (fromDate && toDate && fromDate > toDate) {
+          alert('From date cannot be greater than To date.');
+          return;
+        }
+
+        loadRecentDailyLogs();
+      });
+
+      document.getElementById('resetDailyLogFilterBtn').addEventListener('click', () => {
+        setDefaultDailyLogRange();
+        loadRecentDailyLogs();
+      });
+
+      document.getElementById('addLogRowBtn').addEventListener('click', () => {
+        logEntries.appendChild(buildLogRow());
+      });
+
+      logForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const rows = Array.from(logEntries.querySelectorAll('.log-entry-row'));
+        if (rows.length === 0) {
+          alert('Please add at least one payment entry');
+          return;
+        }
+
+        const entries = rows.map((row) => {
+          const accountId = row.querySelector('.entry-account').value;
+          const amount = row.querySelector('.entry-amount').value;
+          const date = row.querySelector('.entry-date').value;
+          return { account_id: accountId, amount, date };
+        }).filter((entry) => entry.account_id && entry.amount && entry.date);
+
+        if (!entries.length) {
+          alert('Please complete all payment rows before saving');
+          return;
+        }
+
+        const response = await fetch('/api/daily-logs/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entries }),
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          alert(result.error || 'Unable to add payments');
+          return;
+        }
+        alert(result.message);
+        logEntries.innerHTML = '';
+        logEntries.appendChild(buildLogRow());
+        loadDashboard();
+        loadAccounts();
+        loadRecentDailyLogs();
+      });
+
+      monthlyLogAccountSelect.addEventListener('change', (event) => {
+        loadMonthlyLogs(event.target.value);
+      });
+
+      closeAccountForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const accountId = closeAccountSelect.value;
+        if (!accountId) {
+          alert('Please select an account to close');
+          return;
+        }
+
+        const result = await fetch(`/api/accounts/${accountId}/close`, { method: 'POST' });
+        const payload = await result.json();
+        if (!result.ok) {
+          alert(payload.error || 'Unable to close account');
+          return;
+        }
+        alert(payload.message);
+        loadDashboard();
+        loadAccounts();
+        loadRecentDailyLogs();
+      });
+
+      setDefaultDailyLogRange();
+      logEntries.appendChild(buildLogRow());
+      loadDashboard();
+      loadAccounts();
+      loadRecentDailyLogs();
+    </script>
+  </body>
+</html>

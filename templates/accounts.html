@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Accounts | Finance Management</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-box">
+          <p class="eyebrow">Finance</p>
+          <h2>Manager</h2>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Main navigation">
+          <a class="nav-btn nav-link" href="/">Dashboard</a>
+          <a class="nav-btn nav-link active" href="/accounts">Accounts</a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <section class="panel-card account-page-card">
+          <div class="section-head account-page-header">
+            <div>
+              <p class="eyebrow">Manage</p>
+              <h1>Accounts</h1>
+            </div>
+            <a class="primary-btn link-btn" href="/">Back to Dashboard</a>
+          </div>
+
+          <div class="toolbar-row account-filter-row">
+            <label class="inline-filter-field">
+              <span>Status</span>
+              <select id="accountStatusFilter">
+                <option value="all">All</option>
+                <option value="open">Open</option>
+                <option value="closed">Closed</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="account-grid" id="accountList"></div>
+
+          <form id="accountEditForm" class="panel-card account-edit-form">
+            <input type="hidden" id="accountId" />
+
+            <div class="form-grid">
+              <label>
+                Name
+                <input type="text" id="editName" name="name" required />
+              </label>
+              <label>
+                Display Name
+                <input type="text" id="editDisplayName" name="display_name" required />
+              </label>
+              <label>
+                Loan Given Date
+                <input type="date" id="editLoanDate" name="loan_given_date" required />
+              </label>
+              <label>
+                Given Amount
+                <input type="number" id="editGivenAmount" name="given_amount" step="0.01" min="0" required />
+              </label>
+              <label>
+                Expected Amount
+                <input type="number" id="editExpectedAmount" name="expected_amount" step="0.01" min="0" required />
+              </label>
+              <label>
+                Total Months
+                <input type="number" id="editTotalMonths" name="total_months" min="1" required />
+              </label>
+              <label>
+                Status
+                <select id="editStatus" name="status">
+                  <option value="Open">Open</option>
+                  <option value="Closed">Closed</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="primary-btn">Save Changes</button>
+              <button type="button" id="cancelEdit" class="secondary-btn">Cancel</button>
+            </div>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const accountList = document.getElementById('accountList');
+      const accountEditForm = document.getElementById('accountEditForm');
+      const accountIdInput = document.getElementById('accountId');
+      const cancelEditButton = document.getElementById('cancelEdit');
+      const accountStatusFilter = document.getElementById('accountStatusFilter');
+
+      function formatCurrency(value) {
+        return new Intl.NumberFormat('en-IN', {
+          style: 'currency',
+          currency: 'INR',
+          maximumFractionDigits: 2,
+        }).format(Number(value || 0));
+      }
+
+      function populateForm(account) {
+        accountIdInput.value = account.id;
+        document.getElementById('editName').value = account.name || '';
+        document.getElementById('editDisplayName').value = account.display_name || '';
+        document.getElementById('editLoanDate').value = account.loan_given_date || '';
+        document.getElementById('editGivenAmount').value = account.given_amount || 0;
+        document.getElementById('editExpectedAmount').value = account.expected_amount || 0;
+        document.getElementById('editTotalMonths').value = account.total_months || 0;
+        document.getElementById('editStatus').value = account.status === 'Closed' ? 'Closed' : 'Open';
+      }
+
+      function showEditForm() {
+        accountEditForm.classList.add('visible');
+      }
+
+      function hideEditForm() {
+        accountEditForm.classList.remove('visible');
+        accountIdInput.value = '';
+      }
+
+      function renderAccounts(accounts) {
+        accountList.innerHTML = '';
+
+        if (!accounts.length) {
+          accountList.innerHTML = '<div class="empty-state">No accounts found.</div>';
+          hideEditForm();
+          return;
+        }
+
+        accounts.forEach((account) => {
+          const card = document.createElement('article');
+          card.className = 'account-card';
+          card.innerHTML = `
+            <div class="account-card-head">
+              <div>
+                <h3>${account.display_name}</h3>
+                <p>${account.loan_given_date}</p>
+              </div>
+              <span class="status ${account.status.toLowerCase()}">${account.status}</span>
+            </div>
+            <div class="account-card-body">
+              <p><strong>Given:</strong> ${formatCurrency(account.given_amount)}</p>
+              <p><strong>Expected:</strong> ${formatCurrency(account.expected_amount)}</p>
+              <p><strong>Collected:</strong> ${formatCurrency(account.amount_collected)}</p>
+            </div>
+            <div class="account-card-actions">
+              <button type="button" class="primary-btn small-btn" data-account-id="${account.id}">Edit</button>
+              <button type="button" class="danger-btn small-btn" data-delete-account-id="${account.id}">Delete</button>
+            </div>
+          `;
+
+          card.querySelector('[data-account-id]').addEventListener('click', () => {
+            populateForm(account);
+            showEditForm();
+            accountEditForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+
+          card.querySelector('[data-delete-account-id]').addEventListener('click', async () => {
+            const deleteConfirmed = window.confirm(`Delete account "${account.display_name}"?`);
+            if (!deleteConfirmed) {
+              return;
+            }
+
+            const response = await fetch(`/api/accounts/${account.id}`, {
+              method: 'DELETE',
+            });
+            const result = await response.json();
+            if (!response.ok) {
+              alert(result.error || 'Unable to delete account');
+              return;
+            }
+
+            alert(result.message);
+            loadAccounts();
+          });
+
+          accountList.appendChild(card);
+        });
+      }
+
+      async function loadAccounts() {
+        const statusFilter = accountStatusFilter.value || 'all';
+        const params = new URLSearchParams({ status: statusFilter });
+        const response = await fetch(`/api/accounts?${params.toString()}`);
+        const payload = await response.json();
+        renderAccounts(payload.accounts || []);
+        hideEditForm();
+      }
+
+      accountEditForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const accountId = accountIdInput.value;
+        if (!accountId) {
+          alert('Please select an account to edit');
+          return;
+        }
+
+        const payload = {
+          name: document.getElementById('editName').value,
+          display_name: document.getElementById('editDisplayName').value,
+          loan_given_date: document.getElementById('editLoanDate').value,
+          given_amount: document.getElementById('editGivenAmount').value,
+          expected_amount: document.getElementById('editExpectedAmount').value,
+          total_months: document.getElementById('editTotalMonths').value,
+          status: document.getElementById('editStatus').value,
+        };
+
+        const response = await fetch(`/api/accounts/${accountId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+          alert(result.error || 'Unable to update account');
+          return;
+        }
+
+        alert(result.message);
+        hideEditForm();
+        loadAccounts();
+      });
+
+      cancelEditButton.addEventListener('click', () => {
+        hideEditForm();
+      });
+
+      accountStatusFilter.addEventListener('change', () => {
+        loadAccounts();
+      });
+
+      loadAccounts();
+    </script>
+  </body>
+</html>

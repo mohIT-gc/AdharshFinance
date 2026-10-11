@@ -25,7 +25,7 @@ def normalize_database_url(raw_url):
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key")
-app.config["SQLALCHEMY_DATABASE_URI"] = normalize_database_url(os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:AdharshFinance2022@adharshfinance-db.c3i4u0i8kxlb.ap-south-1.rds.amazonaws.com:5432/adharshfinance-db"))
+app.config["SQLALCHEMY_DATABASE_URI"] = normalize_database_url(os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:AdharshFinance2022@adharshfinance-db.c3i4u0i8kxlb.ap-south-1.rds.amazonaws.com:5432/postgres"))
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 app.config["JSON_SORT_KEYS"] = False
